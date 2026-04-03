@@ -97,7 +97,7 @@ export function Lobby({ roomId, players, myId, creatorId }: LobbyProps) {
         </form>
       ) : (
         <p className="name-set">
-          Playing as <strong>{me?.name}</strong>
+          Playing as <strong>{me!.name}</strong>
           <button type="button" className="btn btn-small" onClick={handleEditName} style={{ marginLeft: "0.5rem" }}>
             Edit
           </button>
