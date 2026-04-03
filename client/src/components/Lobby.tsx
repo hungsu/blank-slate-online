@@ -18,7 +18,7 @@ export function Lobby({ roomId, players, myId, creatorId }: LobbyProps) {
 
   const isCreator = myId === creatorId;
   const me = players.find((p) => p.id === myId);
-  const allNamed = players.length >= 2 && players.every((p) => p.name);
+  const allNamed = players.length >= 3 && players.every((p) => p.name);
 
   const shareUrl = `${window.location.origin}/?room=${roomId}`;
 
@@ -103,7 +103,7 @@ export function Lobby({ roomId, players, myId, creatorId }: LobbyProps) {
           className="btn btn-primary btn-large"
           onClick={handleStartGame}
           disabled={!allNamed}
-          title={!allNamed ? "All players must enter a name first" : ""}
+          title={!allNamed ? (players.length < 3 ? "At least 3 players required" : "All players must enter a name first") : ""}
         >
           Start Game
         </button>
