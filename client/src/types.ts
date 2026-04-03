@@ -2,6 +2,7 @@ export interface PlayerInfo {
   id: string;
   name: string;
   score: number;
+  isEditing?: boolean;
 }
 
 export interface AnswerReveal {

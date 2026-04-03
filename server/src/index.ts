@@ -12,6 +12,7 @@ import {
   addPlayer,
   removePlayer,
   setPlayerName,
+  setPlayerEditing,
   allPlayersNamed,
   allPlayersSubmitted,
   submitAnswer,
@@ -50,6 +51,7 @@ function broadcastLobby(room: Room): void {
     id: p.id,
     name: p.name,
     score: p.score,
+    isEditing: p.isEditing,
   }));
   for (const [playerId] of room.players) {
     io.to(playerId).emit("lobby_update", {
@@ -125,6 +127,13 @@ io.on("connection", (socket: Socket) => {
       socket.emit("error", { message: "Invalid name." });
       return;
     }
+    broadcastLobby(room);
+  });
+
+  socket.on("set_editing", ({ editing }: { editing: boolean }) => {
+    const room = getRoom();
+    if (!room || room.phase !== "lobby") return;
+    setPlayerEditing(room, socket.id, editing);
     broadcastLobby(room);
   });
 
