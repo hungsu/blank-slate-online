@@ -1,4 +1,4 @@
-import { useState, FormEvent } from "react";
+import { useState, FormEvent, useEffect } from "react";
 import { socket } from "../socket";
 
 interface HomeProps {
@@ -8,6 +8,23 @@ interface HomeProps {
 export function Home({ initialRoomId }: HomeProps) {
   const [joinCode, setJoinCode] = useState(initialRoomId ?? "");
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    if (!initialRoomId) return;
+
+    function handleError({ message }: { message: string }) {
+      setError(message);
+      socket.disconnect();
+    }
+
+    socket.connect();
+    socket.emit("join_room", { roomId: initialRoomId });
+    socket.once("error", handleError);
+
+    return () => {
+      socket.off("error", handleError);
+    };
+  }, [initialRoomId]);
 
   function handleCreate() {
     setError("");
