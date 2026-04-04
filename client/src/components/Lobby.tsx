@@ -14,11 +14,13 @@ interface LobbyProps {
 export function Lobby({ roomId, players, myId, creatorId }: LobbyProps) {
   const [name, setName] = useState("");
   const [nameSet, setNameSet] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
   const [error, setError] = useState("");
 
   const isCreator = myId === creatorId;
   const me = players.find((p) => p.id === myId);
-  const allNamed = players.length >= 3 && players.every((p) => p.name);
+  const anyEditing = players.some((p) => p.isEditing);
+  const allNamed = players.length >= 3 && players.every((p) => p.name) && !anyEditing;
 
   const shareUrl = `${window.location.origin}/?room=${roomId}`;
 
@@ -36,6 +38,18 @@ export function Lobby({ roomId, players, myId, creatorId }: LobbyProps) {
     setError("");
     socket.emit("set_name", { name: trimmed });
     setNameSet(true);
+    setIsEditing(false);
+  }
+
+  function handleEditName() {
+    setName(me?.name ?? "");
+    setIsEditing(true);
+    socket.emit("set_editing", { editing: true });
+  }
+
+  function handleCancelEdit() {
+    setIsEditing(false);
+    socket.emit("set_editing", { editing: false });
   }
 
   function handleStartGame() {
@@ -45,6 +59,8 @@ export function Lobby({ roomId, players, myId, creatorId }: LobbyProps) {
       setError(message);
     });
   }
+
+  const showForm = !nameSet || !me?.name || isEditing;
 
   return (
     <div className="page lobby-page">
@@ -58,7 +74,7 @@ export function Lobby({ roomId, players, myId, creatorId }: LobbyProps) {
         </button>
       </div>
 
-      {!nameSet || !me?.name ? (
+      {showForm ? (
         <form onSubmit={handleSetName} className="name-form">
           <input
             type="text"
@@ -71,12 +87,20 @@ export function Lobby({ roomId, players, myId, creatorId }: LobbyProps) {
             autoFocus
           />
           <button type="submit" className="btn btn-primary">
-            Set Name
+            {isEditing ? "Save Name" : "Set Name"}
           </button>
+          {isEditing && (
+            <button type="button" className="btn" onClick={handleCancelEdit}>
+              Cancel
+            </button>
+          )}
         </form>
       ) : (
         <p className="name-set">
-          Playing as <strong>{me.name}</strong>
+          Playing as <strong>{me!.name}</strong>
+          <button type="button" className="btn btn-small" onClick={handleEditName} style={{ marginLeft: "0.5rem" }}>
+            Edit
+          </button>
         </p>
       )}
 
@@ -88,7 +112,9 @@ export function Lobby({ roomId, players, myId, creatorId }: LobbyProps) {
               <span className="player-name">{p.name || <em>unnamed</em>}</span>
               {p.id === creatorId && <span className="badge creator">host</span>}
               {p.id === myId && <span className="badge you">you</span>}
-              {p.name ? (
+              {p.isEditing ? (
+                <span className="not-ready-dot" title="Editing name">✎</span>
+              ) : p.name ? (
                 <span className="ready-dot" title="Ready">✓</span>
               ) : (
                 <span className="not-ready-dot" title="Not ready">…</span>
@@ -103,7 +129,7 @@ export function Lobby({ roomId, players, myId, creatorId }: LobbyProps) {
           className="btn btn-primary btn-large"
           onClick={handleStartGame}
           disabled={!allNamed}
-          title={!allNamed ? (players.length < 3 ? "At least 3 players required" : "All players must enter a name first") : ""}
+          title={!allNamed ? (players.length < 3 ? "At least 3 players required" : anyEditing ? "A player is still editing their name" : "All players must enter a name first") : ""}
         >
           Start Game
         </button>

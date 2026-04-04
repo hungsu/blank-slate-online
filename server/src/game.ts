@@ -10,6 +10,7 @@ export interface Player {
   score: number;
   answer: string | null;
   hasSubmitted: boolean;
+  isEditing: boolean;
 }
 
 export interface AnswerReveal {
@@ -53,6 +54,7 @@ export function addPlayer(room: Room, playerId: string): void {
     score: 0,
     answer: null,
     hasSubmitted: false,
+    isEditing: false,
   });
 }
 
@@ -72,12 +74,20 @@ export function setPlayerName(room: Room, playerId: string, name: string): boole
   const trimmed = name.trim().slice(0, MAX_NAME_LENGTH);
   if (!trimmed) return false;
   player.name = trimmed;
+  player.isEditing = false;
+  return true;
+}
+
+export function setPlayerEditing(room: Room, playerId: string, editing: boolean): boolean {
+  const player = room.players.get(playerId);
+  if (!player) return false;
+  player.isEditing = editing;
   return true;
 }
 
 export function allPlayersNamed(room: Room): boolean {
   for (const p of room.players.values()) {
-    if (!p.name) return false;
+    if (!p.name || p.isEditing) return false;
   }
   return true;
 }
