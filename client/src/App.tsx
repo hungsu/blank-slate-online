@@ -46,6 +46,7 @@ export function App() {
     socket.on("room_created", ({ roomId, playerId }: { roomId: string; playerId: string }) => {
       setMyId(playerId);
       setRoomId(roomId);
+      window.history.pushState({ roomId }, "", `?room=${roomId}`);
     });
 
     socket.on("room_joined", ({ roomId, playerId }: { roomId: string; playerId: string }) => {
